@@ -3,7 +3,10 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+from scipy import signal
+import csv
+from statsmodels.stats.weightstats import ttest_ind
+from scipy.stats import ttest_rel
 
 def A_plot(data, num, cond):
     """This function returns am amplitude plot of certain subject for
@@ -109,7 +112,7 @@ def mplot(data, demo, cond, points, subs, tmin):
         y = y.drop('time_ms', axis = 1)
         x.index = range(x.shape[0])
         time = [time[j] + x[j] for j in range (x.shape[0])]
-        #y = y**2
+        y = y**2
         y = y.sum(axis = 1, skipna = True)
         pwr = [pwr[j] + y[j] for j in range(y.shape[0])]
     time = [time[i]/k for i in range(len(time))]
@@ -165,18 +168,29 @@ def pwr_time(data, demo, cond, tmin, tmax, boxplot = False):
     else:
         time0, pwr0 = mplot(data, demo, cond, n, subs0, tmin)
         time1, pwr1 = mplot(data, demo, cond, n, subs1, tmin)
-        #pwr0 = np.sqrt(pwr0)
-        #m0 = max(pwr0)
-        #pwr0 = [pwr0[i]*100/m0 for i in range(len(pwr0))]
-        #pwr1 = np.sqrt(pwr1)
-        #m1 = max(pwr1)
-        #pwr1 = [pwr1[i]*100/m1 for i in range(len(pwr1))]
+        pwr0 = np.sqrt(pwr0)
+        m0 = max(pwr0)
+        pwr0 = [pwr0[i]*100/m0 for i in range(len(pwr0))]
+        #pwr0 = signal.savgol_filter(pwr0, 21, 5)
+        pwr1 = np.sqrt(pwr1)
+        m1 = max(pwr1)
+        pwr1 = [pwr1[i]*100/m1 for i in range(len(pwr1))]
+        #pwr1 = signal.savgol_filter(pwr1, 21, 5)
+        print(ttest_rel(pwr0, pwr1))
+        #print(ttest_ind(pwr0, pwr1))
+
+        """with open('HC.csv', mode='w') as HC_file:
+            wave = csv.writer(HC_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            wave.writerow(pwr0)
+        with open('SZ.csv', mode='w') as SZ_file:
+            wave = csv.writer(SZ_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            wave.writerow(pwr1)
+        with open('time.csv', mode='w') as t_file:
+            wave = csv.writer(t_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            wave.writerow(time1)"""
         fig, ax = plt.subplots(figsize=(13, 10), facecolor = 'w')
         ax.plot(time0[:], pwr0[:], color = 'k', label = 'HC')
         ax.plot(time1[:], pwr1[:], color = 'b', label = 'SZ')
-        ax.legend( loc='bsubs0 = subjects(data, demo, cond, 0)est', borderaxespad=1)
+        ax.legend(loc='best', borderaxespad=1)
         plt.show()
     return 0
-
-def ttest-in(data, demo, cond, group, tmin, tmax):
-    subs = subjects(data, demo, cond, group)
