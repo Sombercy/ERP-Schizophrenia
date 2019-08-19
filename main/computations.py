@@ -3,10 +3,7 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
-from scipy import signal
-import csv
-from statsmodels.stats.weightstats import ttest_ind
-from scipy.stats import ttest_rel
+
 
 def A_plot(data, num, cond):
     """This function returns am amplitude plot of certain subject for
@@ -143,7 +140,7 @@ def mbox(data, demo, cond, points, subs, tmin):
 #    pwr = [pwr[i]*100/pmax for i in range(len(pwr))]
 
     return pwr
-def pwr_time(data, demo, cond, tmin, tmax, boxplot = False):
+def pwr_time(data, demo, cond, tmin, tmax, boxplot = False, export = False):
     #HC sujects
     subs0 = subjects(data, demo, cond, 0)
     #SZ subjects
@@ -171,26 +168,14 @@ def pwr_time(data, demo, cond, tmin, tmax, boxplot = False):
         pwr0 = np.sqrt(pwr0)
         m0 = max(pwr0)
         pwr0 = [pwr0[i]*100/m0 for i in range(len(pwr0))]
-        #pwr0 = signal.savgol_filter(pwr0, 21, 5)
         pwr1 = np.sqrt(pwr1)
         m1 = max(pwr1)
         pwr1 = [pwr1[i]*100/m1 for i in range(len(pwr1))]
-        #pwr1 = signal.savgol_filter(pwr1, 21, 5)
-        print(ttest_rel(pwr0, pwr1))
-        #print(ttest_ind(pwr0, pwr1))
-
-        """with open('HC.csv', mode='w') as HC_file:
-            wave = csv.writer(HC_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            wave.writerow(pwr0)
-        with open('SZ.csv', mode='w') as SZ_file:
-            wave = csv.writer(SZ_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            wave.writerow(pwr1)
-        with open('time.csv', mode='w') as t_file:
-            wave = csv.writer(t_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            wave.writerow(time1)"""
         fig, ax = plt.subplots(figsize=(13, 10), facecolor = 'w')
         ax.plot(time0[:], pwr0[:], color = 'k', label = 'HC')
         ax.plot(time1[:], pwr1[:], color = 'b', label = 'SZ')
-        ax.legend(loc='best', borderaxespad=1)
+        ax.legend( loc='best', borderaxespad=1)
         plt.show()
-    return 0
+    if (export) & (not boxplot): return time0, pwr0, pwr1
+    else: return 0 
+
