@@ -46,9 +46,6 @@ def scsa(y, D, h):
     yscsa =((h/Lcl)*np.sum((psinnor**2)@kappa,1))**(2/(1+2*gm)) 
     if y.shape != yscsa.shape: yscsa = yscsa.T
     return yscsa, kappa, Nh, psinnor
-
-
-    
     
     
     
