@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import seaborn as sns
-
+import functional as func
 
 def A_plot(data, num, cond):
     """This function returns am amplitude plot of certain subject for
@@ -80,7 +80,7 @@ def subjects(data, demo, cond, group):
     subs = [i for i in subs if (list(demo.loc[i])[0] == group)]
     return subs
 
-def mpoints(data, demo, cond, subs, tmin, tmax):
+def mpoints(data, cond, subs, tmin, tmax):
     """This functrion returns quantity of time points appropriet
        for all subjects of the group for a given period (tmin; rmax)"""
     data = data.loc[subs]
@@ -100,7 +100,7 @@ def mplot(data, demo, cond, points, subs, tmin):
     data = data.loc[subs]
     data = data[:][data['condition'] == cond].drop('condition', axis = 1)
     data = data[:][data['time_ms'] >= tmin]
-    for q in range(len(subs)):
+    for q in range(k):
         i = subs[q]
         y = data.loc[i]
         y.index = range(y.shape[0])
@@ -146,7 +146,7 @@ def pwr_time(data, demo, cond, tmin, tmax, boxplot = False, export = False):
     #SZ subjects
     subs1 = subjects(data, demo, cond, 1)
     #average quantity of time-points of the given period
-    n = (mpoints(data, demo, cond, subs0, tmin, tmax) + mpoints(data, demo, cond, subs1, tmin, tmax))//2 #average quantity of time-points of the given period
+    n = (mpoints(data, cond, subs0, tmin, tmax) + mpoints(data,  cond, subs1, tmin, tmax))//2
     #building a boxplot with mean values of the given period
     if boxplot:
         df = pd.DataFrame(columns = ['Amplitude', 'Group', 'Condition'])
@@ -171,11 +171,47 @@ def pwr_time(data, demo, cond, tmin, tmax, boxplot = False, export = False):
         pwr1 = np.sqrt(pwr1)
         m1 = max(pwr1)
         pwr1 = [pwr1[i]*100/m1 for i in range(len(pwr1))]
-        fig, ax = plt.subplots(figsize=(13, 10), facecolor = 'w')
-        ax.plot(time0[:], pwr0[:], color = 'k', label = 'HC')
-        ax.plot(time1[:], pwr1[:], color = 'b', label = 'SZ')
-        ax.legend( loc='best', borderaxespad=1)
-        plt.show()
-    if (export) & (not boxplot): return time0, pwr0, pwr1
-    else: return 0 
+        if (export) & (not boxplot): return time0, pwr0, pwr1
+        else:
+            fig, ax = plt.subplots(figsize=(13, 10), facecolor = 'w')
+            ax.plot(time0[:], pwr0[:], color = 'k', label = 'HC')
+            ax.plot(time1[:], pwr1[:], color = 'b', label = 'SZ')
+            ax.legend( loc='best', borderaxespad=1)
+            plt.show()
+            return 0
 
+
+def dataset(data, demo, cond, tmin, tmax):
+    subs = list(set(data.index.values.tolist()))
+    n = mpoints(data, cond, subs,tmin, tmax)
+    time = [0] * n
+    pwr = []
+    Y = []
+    k = len(subs)
+    data = data[:][data['condition'] == cond].drop('condition', axis = 1)
+    data = data[:][data['time_ms'] >= tmin]
+    for i in range(1, k+1):
+        y = data.loc[i]
+        y.index = range(y.shape[0])
+        y = y.loc[:n-1, :]
+        x = y.loc[:, 'time_ms']
+        y = y.drop('time_ms', axis = 1)
+        x.index = range(x.shape[0])
+        time = [time[j] + x[j] for j in range (x.shape[0])]
+        y = y**2
+        y = y.sum(axis = 1, skipna = True)
+        y = np.sqrt(y)
+        y = [y[j]*100/max(y) for j in range(len(y))]
+        pwr.append(y)
+        Y.append(list(demo.loc[i])[0])
+    time = [time[i]/k for i in range(len(time))]
+    return time, pwr, Y
+
+def eigen(y):
+    M = len(y.tolist())
+    fe = 1
+    feh = 2*np.pi/M
+    D = func.delta(M,fe,feh)
+    hh = 15
+    yscsa, kappa, Nh, psinnor = func.scsa(y, D, hh)
+    return Nh, psinnor
