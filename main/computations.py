@@ -214,4 +214,4 @@ def eigen(y):
     D = func.delta(M,fe,feh)
     hh = 15
     yscsa, kappa, Nh, psinnor = func.scsa(y, D, hh)
-    return Nh, psinnor
+    return kappa, Nh
