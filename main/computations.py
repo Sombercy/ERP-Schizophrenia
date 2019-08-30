@@ -181,31 +181,25 @@ def pwr_time(data, demo, cond, tmin, tmax, boxplot = False, export = False):
             return 0
 
 
-def dataset(data, demo, cond, tmin, tmax):
+def dataset(data, demo, cond, tmin, tmax, n):
     subs = list(set(data.index.values.tolist()))
-    n = mpoints(data, cond, subs,tmin, tmax)
-    time = [0] * n
     pwr = []
     Y = []
     k = len(subs)
     data = data[:][data['condition'] == cond].drop('condition', axis = 1)
     data = data[:][data['time_ms'] >= tmin]
+    data = data[:][data['time_ms'] <= tmax].drop('time_ms', axis = 1)
     for i in range(1, k+1):
         y = data.loc[i]
         y.index = range(y.shape[0])
         y = y.loc[:n-1, :]
-        x = y.loc[:, 'time_ms']
-        y = y.drop('time_ms', axis = 1)
-        x.index = range(x.shape[0])
-        time = [time[j] + x[j] for j in range (x.shape[0])]
         y = y**2
         y = y.sum(axis = 1, skipna = True)
         y = np.sqrt(y)
         y = [y[j]*100/max(y) for j in range(len(y))]
         pwr.append(y)
         Y.append(list(demo.loc[i])[0])
-    time = [time[i]/k for i in range(len(time))]
-    return time, pwr, Y
+    return pwr, Y
 
 def eigen(y):
     M = len(y.tolist())
@@ -214,4 +208,4 @@ def eigen(y):
     D = func.delta(M,fe,feh)
     hh = 15
     yscsa, kappa, Nh, psinnor = func.scsa(y, D, hh)
-    return kappa, Nh
+    return kappa, Nh, psinnor
